@@ -1,0 +1,36 @@
+# systemd "service" unit. Describes HOW to run the updater.
+# Paired with discord-updater.timer, which describes WHEN.
+# Lives in ~/.config/systemd/user/ (a "user unit": runs as you, no root).
+
+[Unit]
+# Human-readable label shown by `systemctl status` and `list-units`.
+Description=Discord version check and update
+Documentation=https://discord.com
+
+# Ordering only: don't start this until network + DNS are up.
+# (Ordering does not pull these targets in; that's what Wants= does.)
+After=network-online.target nss-lookup.target
+
+# Soft dependency: try to bring network-online.target up if not already.
+# Soft = if it fails, this unit still runs. Use Requires= for hard deps.
+Wants=network-online.target
+
+[Service]
+# oneshot = a script that runs to completion and exits, not a daemon.
+# systemd marks the unit "active (running)" while the script runs,
+# then "inactive (dead)" after a clean exit. Right type for an updater.
+Type=oneshot
+
+# %h expands to $HOME for user units. Final path is e.g.
+#   /home/<user>/.local/share/apps/Discord/discord-updater.sh
+ExecStart=%h/.local/share/apps/Discord/discord-updater.sh
+
+# CPU scheduling niceness. Range -20 (high prio) .. 19 (low prio).
+# 10 = background work, don't fight foreground apps for CPU.
+Nice=10
+
+[Install]
+# What `systemctl --user enable` hooks this into.
+# Mostly irrelevant here. The timer is what gets enabled, and it pulls
+# this service in via Requires= when it fires.
+WantedBy=default.target

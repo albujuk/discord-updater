@@ -1,0 +1,31 @@
+# systemd "timer" unit. The cron replacement.
+# Fires discord-updater.service on a schedule.
+
+[Unit]
+Description=Periodic Discord update check
+
+# Hard dependency on the service we're driving. If the service file is
+# missing or fails to load, this timer fails too.
+Requires=discord-updater.service
+
+[Timer]
+# Fire 2 minutes after the user manager starts (i.e. ~2 min after login
+# for user units). Gives network/session time to settle before running.
+OnBootSec=2min
+
+# After each successful run, wait 1 day before firing again.
+# Cadence is "once per day from last run", NOT "every day at midnight".
+OnUnitActiveSec=1d
+
+# If the machine was off/asleep during a scheduled fire, run it on next
+# boot to catch up. Without this you'd silently skip days.
+Persistent=true
+
+# Service to trigger. Optional because systemd defaults to the same-stem
+# .service when a .timer is named <foo>.timer, but explicit is clearer.
+Unit=discord-updater.service
+
+[Install]
+# `systemctl --user enable` hooks this into timers.target, which the
+# user manager activates at session start, so the timer auto-arms on login.
+WantedBy=timers.target
