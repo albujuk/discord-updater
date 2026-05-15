@@ -7,8 +7,9 @@
 set -euo pipefail
 
 # Where the updater script will live (matches ExecStart= in the .service).
-DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
-INSTALL_DIR="$DATA_HOME/apps/Discord"
+# Kept separate from the Discord install dir so the updater can't delete
+# itself when it swaps Discord on upgrade.
+SCRIPT_DIR="$HOME/.local/bin"
 
 # Standard XDG path for user systemd units. systemd --user scans this dir.
 UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
@@ -24,12 +25,12 @@ for f in "$SCRIPT_SRC" "$SERVICE_SRC" "$TIMER_SRC"; do
     [[ -f "$f" ]] || { echo "missing: $f" >&2; exit 1; }
 done
 
-mkdir -p "$INSTALL_DIR" "$UNIT_DIR"
+mkdir -p "$SCRIPT_DIR" "$UNIT_DIR"
 
 # `install` = cp + chmod + mkdir in one syscall-light command.
 #   0755 = rwx for owner, rx for group/other (executable script)
 #   0644 = rw for owner, r for group/other (data file, unit files)
-install -m 0755 "$SCRIPT_SRC"  "$INSTALL_DIR/discord-updater.sh"
+install -m 0755 "$SCRIPT_SRC"  "$SCRIPT_DIR/discord-updater.sh"
 install -m 0644 "$SERVICE_SRC" "$UNIT_DIR/discord-updater.service"
 install -m 0644 "$TIMER_SRC"   "$UNIT_DIR/discord-updater.timer"
 

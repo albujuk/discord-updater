@@ -22,8 +22,9 @@ Wants=network-online.target
 Type=oneshot
 
 # %h expands to $HOME for user units. Final path is e.g.
-#   /home/<user>/.local/share/apps/Discord/discord-updater.sh
-ExecStart=%h/.local/share/apps/Discord/discord-updater.sh
+#   /home/<user>/.local/bin/discord-updater.sh
+# Kept out of the Discord install dir so updates can't nuke the updater.
+ExecStart=%h/.local/bin/discord-updater.sh
 
 # CPU scheduling niceness. Range -20 (high prio) .. 19 (low prio).
 # 10 = background work, don't fight foreground apps for CPU.
